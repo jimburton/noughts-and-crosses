@@ -1,34 +1,82 @@
 //Establish the WebSocket connection and set up event handlers
-var webSocket = new WebSocket("ws://" + location.hostname + ":" + location.port + "/chat/");
-webSocket.onmessage = function (msg) { updateChat(msg); };
-webSocket.onclose = function () { alert("WebSocket connection closed") };
+var websocket;
+var output;
+var name = "...";
+var inGame = false;
 
-//Send message if "Send" is clicked
-id("send").addEventListener("click", function () {
-    sendMessage(id("message").value);
-});
+function init() {
+    output = id("output");
 
-//Send message if enter is pressed in the input field
-id("message").addEventListener("keypress", function (e) {
-    if (e.keyCode === 13) { sendMessage(e.target.value); }
-});
+    //Send message if "Send" is clicked
+    id("send").addEventListener("click", function () {
+        sendMessage(id("message").value);
+    });
 
-//Send a message if it's not empty, then clear the input field
-function sendMessage(message) {
-    if (message !== "") {
-        webSocket.send(message);
-        id("message").value = "";
-    }
+    //Send message if enter is pressed in the input field
+    id("message").addEventListener("keypress", function (e) {
+        if (e.keyCode === 13) { sendMessage(e.target.value); }
+    });
+
+    websocket = new WebSocket("ws://localhost:4567/game");
+    websocket.onopen = function(evt) { onOpen(evt) };
+    websocket.onclose = function(evt) { onClose(evt) };
+    websocket.onmessage = function(evt) { handleMessage(evt) };
+    websocket.onerror = function(evt) { onError(evt) };
+}
+
+function onOpen(evt) {
+    writeToScreen("CONNECTED");
+}
+
+function onClose(evt) {
+    alert("WebSocket connection closed");
 }
 
 //Update the chat-panel, and the list of connected users
-function updateChat(msg) {
+function handleMessage(msg) {
     var data = JSON.parse(msg.data);
-    insert("chat", data.userMessage);
+    console.log(data);
+    switch (data.type) {
+        case "TEXT":
+            insert("chat", data.userMessage);
+            break;
+        case "INFO":
+            insert("system_messages", data.userMessage);
+            break;
+        case "MOVE":
+            move(data.move);
+            break;
+        case "NAME":
+            break;
+        case "NAME_ACK":
+            break;
+    }
+
     id("userlist").innerHTML = "";
     data.userlist.forEach(function (user) {
         insert("userlist", "<li>" + user + "</li>");
     });
+}
+
+function onError(evt) {
+    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+}
+
+//Send a message if it's not empty, then clear the input field
+function sendMessage(message) {
+    if (message !== "") {
+        websocket.send(message);
+        id("message").value = "";
+    }
+}
+
+function move(cell) {
+    //make the move
+}
+
+function setName(str) {
+    name = str;
+    insert("name_holder", name);
 }
 
 //Helper function for inserting HTML as the first child of an element
@@ -40,3 +88,23 @@ function insert(targetId, message) {
 function id(id) {
     return document.getElementById(id);
 }
+
+function writeToScreen(message) {
+    var pre = document.createElement("p");
+    pre.style.wordWrap = "break-word";
+    pre.innerHTML = message;
+    output.appendChild(pre);
+}
+
+function sendName() {
+    var theName = id("form_name_text").value;
+    console.log(theName);
+    send("NAME", theName);
+}
+
+function send(type, msg) {
+    var data = {"msgType": type, "userMessage": msg};
+    websocket.send(data);
+}
+
+window.addEventListener("load", init, false);

@@ -1,6 +1,7 @@
+package CI346.websockets;
+
 import org.eclipse.jetty.websocket.api.*;
 import org.eclipse.jetty.websocket.api.annotations.*;
-import org.json.JSONObject;
 
 import java.io.*;
 import java.text.SimpleDateFormat;
@@ -24,7 +25,7 @@ public class EchoWebSocket {
         //sessions.add(session);
         String username = "User" + nextUserNumber++;
         userUsernameMap.put(session, username);
-        broadcastMessage("Server", username + " joined the club");
+        //broadcastMessage("Server", username + " joined the club");
     }
 
     @OnWebSocketClose
@@ -32,7 +33,7 @@ public class EchoWebSocket {
         //sessions.remove(session);
         String username = userUsernameMap.get(session);
         userUsernameMap.remove(session);
-        broadcastMessage("Server", username + " left the chat");
+        //broadcastMessage("Server", username + " left the chat");
     }
 
     @OnWebSocketMessage
@@ -40,7 +41,7 @@ public class EchoWebSocket {
         System.out.println("Got: " + message);   // Print message
         session.getRemote().sendString(message); // and send it back
     }
-
+/*
     //Sends a message from one user to all users, along with a list of current usernames
     public static void broadcastMessage(String sender, String message) {
         userUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
@@ -63,5 +64,5 @@ public class EchoWebSocket {
                 span().withClass("timestamp").withText(new SimpleDateFormat("HH:mm:ss").format(new Date()))
         ).render();
     }
-
+*/
 }
