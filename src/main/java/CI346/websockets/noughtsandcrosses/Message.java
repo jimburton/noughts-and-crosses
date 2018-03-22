@@ -3,21 +3,21 @@ package CI346.websockets.noughtsandcrosses;
 import java.util.Collection;
 
 public class Message {
-    private String msgType;
+    private NACWebSocket.MsgType msgType;
     private String userMessage;
     private Collection<String> userList;
 
-    public Message(String msgType, String userMessage, Collection<String> userList) {
+    public Message(NACWebSocket.MsgType msgType, String userMessage, Collection<String> userList) {
         this.msgType = msgType;
         this.userMessage = userMessage;
         this.userList = userList;
     }
 
-    public String getMsgType() {
+    public NACWebSocket.MsgType getMsgType() {
         return msgType;
     }
 
-    public void setMsgType(String msgType) {
+    public void setMsgType(NACWebSocket.MsgType msgType) {
         this.msgType = msgType;
     }
 

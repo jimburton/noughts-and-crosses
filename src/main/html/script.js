@@ -36,7 +36,8 @@ function onClose(evt) {
 function handleMessage(msg) {
     var data = JSON.parse(msg.data);
     console.log(data);
-    switch (data.type) {
+    //console.log("Received: "+data.userlist);
+    switch (data.msgType) {
         case "TEXT":
             insert("chat", data.userMessage);
             break;
@@ -49,13 +50,17 @@ function handleMessage(msg) {
         case "NAME":
             break;
         case "NAME_ACK":
+            name = data.userMessage;
+            console.log("Name is now: "+name);
+            console.log(data.userList);
+            id("userlist").innerHTML = "";
+            data.userList.forEach(function (user) {
+                insert("userlist", "<li>" + user + "</li>");
+            });
             break;
     }
 
-    id("userlist").innerHTML = "";
-    data.userlist.forEach(function (user) {
-        insert("userlist", "<li>" + user + "</li>");
-    });
+    /**/
 }
 
 function onError(evt) {
@@ -65,7 +70,7 @@ function onError(evt) {
 //Send a message if it's not empty, then clear the input field
 function sendMessage(message) {
     if (message !== "") {
-        websocket.send(message);
+        websocket.send(JSON.stringify(message));
         id("message").value = "";
     }
 }
@@ -104,7 +109,7 @@ function sendName() {
 
 function send(type, msg) {
     var data = {"msgType": type, "userMessage": msg};
-    websocket.send(data);
+    websocket.send(JSON.stringify(data));
 }
 
 window.addEventListener("load", init, false);

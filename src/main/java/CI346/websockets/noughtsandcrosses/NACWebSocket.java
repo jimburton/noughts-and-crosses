@@ -27,8 +27,7 @@ public class NACWebSocket {
     //private static final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
     // this map is shared between sessions and threads, so it needs to be thread-safe
     // (http://stackoverflow.com/a/2688817)
-    static Map<Session, String> userUsernameMap = new ConcurrentHashMap<>();
-    static int nextUserNumber = 1;
+    static Map<Session, String> userMap = new ConcurrentHashMap<>();
     static Gson gson = new Gson();
 
 
@@ -42,7 +41,7 @@ public class NACWebSocket {
         , NAME_ACK
     }
 
-    Logger logger = LoggerFactory.getLogger(NACWebSocket.class);
+    static Logger logger = LoggerFactory.getLogger(NACWebSocket.class);
 
     @OnWebSocketConnect
     public void connected(Session session) {
@@ -52,37 +51,48 @@ public class NACWebSocket {
     @OnWebSocketClose
     public void closed(Session session, int statusCode, String reason) {
         //sessions.remove(session);
-        String username = userUsernameMap.get(session);
-        userUsernameMap.remove(session);
-        broadcastMessage("Server", MsgType.INFO, username + " left the club");
+        String username = userMap.get(session);
+        userMap.remove(session);
+        //broadcastMessage("Server", MsgType.INFO, username + " left the club");
     }
 
     @OnWebSocketMessage
     public void message(Session session, String message) throws IOException {
         logger.info("Received: "+message.toString());
-        Message[] msgs = gson.fromJson(message, Message[].class);
-        logger.info("Received: "+msgs[0].toString());
-        if(message.startsWith(NAME.toString())) {
-            Collection<String> names = userUsernameMap.values();
-            String name = message.substring(NAME.toString().length());
-            if(names.contains(name)) {
-                send(session, MsgType.NAME);
-            } else {
-                userUsernameMap.put(session, name);
-                send(session, MsgType.NAME_ACK, String.valueOf(userUsernameMap.values()));
-            }
+        Message msg = gson.fromJson(message, Message.class);
+        logger.info("Received: "+msg.toString());
+        switch (msg.getMsgType()) {
+            case NAME:
+                Collection<String> names = userMap.values();
+                String name = msg.getUserMessage();
+                if(names.contains(name)) {
+                    logger.info("name clash!");
+                    send(session, MsgType.NAME);
+                } else {
+                    logger.info("name is free: "+name);
+                    userMap.put(session, name);
+                    logger.info("Number of names: "+userMap.keySet().size());
+                    send(session, MsgType.NAME_ACK,
+                            name, userMap.values());
+                }
+                break;
+            case NAME_ACK:
+            case INFO:
+            case JOIN:
+            case MOVE:
+            case TEXT:
+            case LEAVE:
+                break;
         }
     }
 
     //Sends a message from one user to all users, along with a list of current usernames
     public static void broadcastMessage(String sender, MsgType type, String message) {
 
-        Message msg = new Message(type.toString(),
-                createHtmlMessageFromSender(sender, message),
-                userUsernameMap.values());
-        userUsernameMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
+        Collection<String> vals = userMap.values();
+        userMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
             try {
-                session.getRemote().sendString(gson.toJson(msg));
+                send(session, type, "", vals);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -98,19 +108,35 @@ public class NACWebSocket {
         ).render();
     }
 
-    private void send(Session session, MsgType type) {
-        send(session, type, "");
+    private static void send(Session session, MsgType type) {
+        send(session, type, "", null);
     }
 
-    private void send(Session session, MsgType type, String theMsg) {
-        Message msg = new Message(type.toString(),
+    private static void send(Session session, MsgType type, String theMsg) {
+        send(session, type, theMsg, null);
+    }
+
+    private static void send(Session session, MsgType type,
+                             String theMsg, Collection<String> list) {
+        Message msg = new Message(type,
                 theMsg,
-                null);
+                list);
         try {
+            logger.info("Sending: "+gson.toJson(msg));
             session.getRemote().sendString(gson.toJson(msg));
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private MsgType stringToMsgType(String str) {
+        MsgType[] vals = MsgType.values();
+        for(MsgType t: vals) {
+            if(t.name().equals(str)) {
+                return t;
+            }
+        }
+        return null;
     }
 
 }
