@@ -12,12 +12,12 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
-import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.NAME;
+import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.*;
 import static j2html.TagCreator.*;
 
 @WebSocket
@@ -27,18 +27,22 @@ public class NACWebSocket {
     //private static final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
     // this map is shared between sessions and threads, so it needs to be thread-safe
     // (http://stackoverflow.com/a/2688817)
-    static Map<Session, String> userMap = new ConcurrentHashMap<>();
+    static Map<Session, Player> userMap = new ConcurrentHashMap<>();
+    static List<Game> games = new ArrayList<>();
     static Gson gson = new Gson();
 
 
     enum MsgType {
         JOIN
         , LEAVE
+        , LIST
         , TEXT
         , INFO
         , MOVE
         , NAME
         , NAME_ACK
+        , PLAYER_1
+        , PLAYER_2
     }
 
     static Logger logger = LoggerFactory.getLogger(NACWebSocket.class);
@@ -51,7 +55,7 @@ public class NACWebSocket {
     @OnWebSocketClose
     public void closed(Session session, int statusCode, String reason) {
         //sessions.remove(session);
-        String username = userMap.get(session);
+        //String username = userMap.get(session).getName();
         userMap.remove(session);
         //broadcastMessage("Server", MsgType.INFO, username + " left the club");
     }
@@ -63,49 +67,90 @@ public class NACWebSocket {
         logger.info("Received: "+msg.toString());
         switch (msg.getMsgType()) {
             case NAME:
-                Collection<String> names = userMap.values();
-                String name = msg.getUserMessage();
-                if(names.contains(name)) {
-                    logger.info("name clash!");
-                    send(session, MsgType.NAME);
-                } else {
-                    logger.info("name is free: "+name);
-                    userMap.put(session, name);
-                    logger.info("Number of names: "+userMap.keySet().size());
-                    send(session, MsgType.NAME_ACK,
-                            name, userMap.values());
-                }
+                setNameOrRequestAgain(session, msg);
                 break;
-            case NAME_ACK:
-            case INFO:
+            case LEAVE:
+                leave(session);
+                break;
             case JOIN:
+                join(session, msg);
+                break;
             case MOVE:
             case TEXT:
-            case LEAVE:
                 break;
         }
     }
 
-    //Sends a message from one user to all users, along with a list of current usernames
-    public static void broadcastMessage(String sender, MsgType type, String message) {
+    private static void join(Session session, Message msg) {
+        Player p1 = userMap.get(session);
+        Optional<Player> p2Opt = userMap.values().stream()
+                .filter(p -> p.getName().equals(msg.getUserMessage()))
+                .findFirst();
+        if(p2Opt.isPresent() && !p2Opt.get().isInGame()) {
+            Player p2 = p2Opt.get();
+            logger.info("new game between "+p1.getName()+" and "+p2.getName());
+            Game g = new Game(p1, p2);
+            games.add(g);
+            Session p2session = getSession(p2);
+            send(session, PLAYER_1);
+            send(p2session, PLAYER_2);
+        } else {
+            send(session, JOIN);
+        }
+    }
 
-        Collection<String> vals = userMap.values();
+    private static Session getSession(Player p) {
+        for (Entry<Session, Player> entry : userMap.entrySet()) {
+            if (p.equals(entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
+
+    private static void setNameOrRequestAgain(Session session, Message msg) {
+        Collection<Player> names = userMap.values();
+        String name = msg.getUserMessage();
+        if(names.stream().map(Player::getName).anyMatch(n -> n.equals(name))) {
+            logger.info("name clash!");
+            send(session, MsgType.NAME);
+        } else {
+            logger.info("name is free: "+name);
+            userMap.put(session, new Player(name));
+            logger.info("Number of names: "+userMap.keySet().size());
+            send(session, MsgType.NAME_ACK,
+                    name, null);
+            broadcastMessage(name, LIST, "");
+        }
+    }
+
+    private static void leave(Session session) {
+        Player left = userMap.get(session);
+        userMap.remove(session);
+        games = games.stream()
+                .filter(g -> !(g.getP1().equals(left) && !(g.getP2().equals(left))))
+                .collect(Collectors.toList());
+        broadcastMessage("", LIST, "");
+    }
+
+    //Sends a message from one user to all users, along with a list of current usernames
+    public static void broadcastMessage(String sender, MsgType type, String msg) {
+
+        Collection<String> names = userMap.values().stream()
+                .filter(p -> !p.isInGame())
+                .map(p -> p.getName())
+                .collect(Collectors.toList());
+        Collection<String> gameStrings = games.stream()
+                .map(g -> g.getP1().getName()+" vs "+g.getP1().getName())
+                .collect(Collectors.toList());
+        gameStrings.addAll(names);
         userMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
             try {
-                send(session, type, "", vals);
+                send(session, type, msg, gameStrings);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
-    }
-
-    //Builds a HTML element with a sender-name, a message, and a timestamp,
-    private static String createHtmlMessageFromSender(String sender, String message) {
-        return article().with(
-                b(sender + " says:"),
-                p(message),
-                span().withClass("timestamp").withText(new SimpleDateFormat("HH:mm:ss").format(new Date()))
-        ).render();
     }
 
     private static void send(Session session, MsgType type) {
@@ -128,15 +173,4 @@ public class NACWebSocket {
             e.printStackTrace();
         }
     }
-
-    private MsgType stringToMsgType(String str) {
-        MsgType[] vals = MsgType.values();
-        for(MsgType t: vals) {
-            if(t.name().equals(str)) {
-                return t;
-            }
-        }
-        return null;
-    }
-
 }

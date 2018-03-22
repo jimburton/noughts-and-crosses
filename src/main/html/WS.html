@@ -10,8 +10,11 @@
 </head>
 <body>
 <h2>Noughts and Crosses</h2>
+<div id="name_holder"></div>
 <form onsubmit="sendName(); return false;" id="form_name">
-    <input type="text" id="form_name_text" placeholder="Enter your name"/> <input type="submit" value="Submit"/>
+    <input type="text"   id="form_name_text" placeholder="Enter your name"/>
+    <input type="submit" id="form_name_submit" value="Submit"/>
+    <input type="submit" id="form_name_leave" onclick="leave(); return false;" value="Quit" />
 </form>
 
 <div id="output"></div>
@@ -22,5 +25,10 @@
 </div>
 <ul id="userlist"> <!-- Built by JS --> </ul>
 <div id="chat">    <!-- Built by JS --> </div>
+
+<div id="tictactoe"></div>
+<div align="left">
+    <span id='turn'>Player X</span>
+</div>
 </body>
 </html>

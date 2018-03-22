@@ -6,6 +6,7 @@ var inGame = false;
 
 function init() {
     output = id("output");
+    setupJoin();
 
     //Send message if "Send" is clicked
     id("send").addEventListener("click", function () {
@@ -52,15 +53,27 @@ function handleMessage(msg) {
         case "NAME_ACK":
             name = data.userMessage;
             console.log("Name is now: "+name);
+            setupLeave();
+            break;
+        case "LIST":
             console.log(data.userList);
             id("userlist").innerHTML = "";
             data.userList.forEach(function (user) {
-                insert("userlist", "<li>" + user + "</li>");
+                if(!(name === user)) {
+                    if (user.includes(" vs ")) {
+                        insert("userlist", "<li>" + user + "</a></li>");
+                    } else {
+                        var link = "<a href='#' onclick='return join(\""
+                            + user + "\");' >" + user + "</a>";
+                        insert("userlist", "<li>" + link + "</a></li>");
+                    }
+                }
             });
-            break;
     }
+}
 
-    /**/
+function join(p2) {
+    send("JOIN", p2);
 }
 
 function onError(evt) {
@@ -110,6 +123,30 @@ function sendName() {
 function send(type, msg) {
     var data = {"msgType": type, "userMessage": msg};
     websocket.send(JSON.stringify(data));
+}
+
+function leave() {
+    send("LEAVE", "");
+    setupJoin();
+    var node = id("userlist");
+    node.innerHTML = "";
+    while (node.firstChild) {
+        node.removeChild(node.firstChild);
+    }
+}
+
+function setupJoin() {
+    id("form_name_text").style.display = 'block'
+    id("form_name_submit").style.display = 'block'
+    id("form_name_leave").style.display = 'none'
+    id("name_holder").innerHTML = "";
+}
+
+function setupLeave() {
+    id("form_name_text").style.display = 'none'
+    id("form_name_submit").style.display = 'none'
+    id("form_name_leave").style.display = 'block'
+    id("name_holder").innerHTML = name;
 }
 
 window.addEventListener("load", init, false);
