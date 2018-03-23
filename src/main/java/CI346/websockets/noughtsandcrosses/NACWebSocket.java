@@ -36,8 +36,6 @@ public class NACWebSocket {
         JOIN
         , LEAVE
         , LIST
-        , TEXT
-        , INFO
         , MOVE
         , NAME
         , NAME_ACK
@@ -76,7 +74,6 @@ public class NACWebSocket {
                 join(session, msg);
                 break;
             case MOVE:
-            case TEXT:
                 break;
         }
     }

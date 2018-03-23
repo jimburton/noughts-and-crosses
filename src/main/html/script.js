@@ -39,12 +39,6 @@ function handleMessage(msg) {
     console.log(data);
     //console.log("Received: "+data.userlist);
     switch (data.msgType) {
-        case "TEXT":
-            insert("chat", data.userMessage);
-            break;
-        case "INFO":
-            insert("system_messages", data.userMessage);
-            break;
         case "MOVE":
             move(data.move);
             break;
@@ -57,19 +51,24 @@ function handleMessage(msg) {
             break;
         case "LIST":
             console.log(data.userList);
-            id("userlist").innerHTML = "";
-            data.userList.forEach(function (user) {
-                if(!(name === user)) {
-                    if (user.includes(" vs ")) {
-                        insert("userlist", "<li>" + user + "</a></li>");
-                    } else {
-                        var link = "<a href='#' onclick='return join(\""
-                            + user + "\");' >" + user + "</a>";
-                        insert("userlist", "<li>" + link + "</a></li>");
-                    }
-                }
-            });
+            doUserList(data.userList, name);
+            break;
     }
+}
+
+function doUserList(userList) {
+    id("userlist").innerHTML = "";
+    userList.forEach(function (user) {
+        if(!(name === user)) {
+            if (user.includes(" vs ")) {
+                insert("userlist", "<li>" + user + "</a></li>");
+            } else {
+                var link = "<a href='#' onclick='return join(\""
+                    + user + "\");' >" + user + "</a>";
+                insert("userlist", "<li>" + link + "</a></li>");
+            }
+        }
+    });
 }
 
 function join(p2) {
