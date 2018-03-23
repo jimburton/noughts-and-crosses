@@ -29,7 +29,6 @@ function onClose(evt) {
 function handleMessage(msg) {
     var data = JSON.parse(msg.data);
     console.log(data);
-    //console.log("Received: "+data.userlist);
     switch (data.msgType) {
         case "MOVE":
             //received a move
@@ -65,32 +64,6 @@ function handleMessage(msg) {
         case "LEAVE":
             //was kicked out
             break;
-    }
-}
-
-//enable the board for playing
-function enableBoard() {
-    setCellHandler(set);
-}
-
-//disable the board for playing
-function disableBoard() {
-    setCellHandler(function(){});
-}
-
-//assign an onlick handler to every cell in the table
-function setCellHandler(handler) {
-    var board = document.getElementById('tictactoe').getElementsByTagName('table')[0];
-    var rows = board.getElementsByTagName("tr");
-    for(var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        var arr = row.getElementsByTagName("td");
-        for(var j = 0; j < arr.length; j++) {
-            (function(_j){
-                //arr[_j].onclick = function() { alert(arr[_j].innerHTML); };
-                arr[_j].onclick =  handler;
-            })(j);
-        }
     }
 }
 
@@ -131,20 +104,21 @@ function join(p2) {
 
 //Handler for errors
 function onError(evt) {
-    writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
+    id("name_holder").innerHTML = '<span class="error">ERROR:</span> ' + evt.data;
 }
 
-//handler for receiving a move from the server
-function acceptMove(cell) {
-    //make the move
-    enableBoard();
-}
-
-//handler for receiving a move from the server
+//Send a move to the server
 function sendMove(identifier) {
     send("MOVE", identifier);
     disableBoard();
     setTurnLabel();
+}
+
+//Send a possible name to the server
+function sendName() {
+    var theName = id("form_name_text").value;
+    console.log(theName);
+    send("NAME", theName);
 }
 
 //Handler for name being accepted by the server
@@ -184,13 +158,6 @@ function insert(targetId, message) {
 //Helper function for selecting element by id
 function id(id) {
     return document.getElementById(id);
-}
-
-//Send a possible name to the server
-function sendName() {
-    var theName = id("form_name_text").value;
-    console.log(theName);
-    send("NAME", theName);
 }
 
 //Send a JSON message with the given type
@@ -247,5 +214,25 @@ String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
         return str;
     };
 
-//Call the inti function when the page has loaded all resources
+/////////////////////
+// Chat functionality
+/////////////////////
+
+//Send a message to the opponent player
+function chat() {
+
+}
+
+//Call the init function when the page has loaded all resources
 window.addEventListener("load", init, false);
+
+//warn the user when leaving a game
+window.addEventListener("beforeunload", function (e) {
+    if(inGame) {
+        var confirmationMessage = 'Are you sure you want to leave the game?';
+        (e || window.event).returnValue = confirmationMessage; //Gecko + IE
+        return confirmationMessage; //Gecko + Webkit, Safari, Chrome etc.
+    } else {
+        return true;
+    }
+});

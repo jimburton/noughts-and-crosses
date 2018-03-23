@@ -1,7 +1,6 @@
 package CI346.websockets.noughtsandcrosses;
 /**
- * A POJO for messages. Using Lombok for getters and setters and
- * a custom toString method.
+ * A POJO for messages.
  */
 
 import lombok.AllArgsConstructor;

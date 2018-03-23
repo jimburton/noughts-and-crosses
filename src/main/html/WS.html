@@ -21,10 +21,20 @@
     <input type="submit" id="form_name_leave" onclick="leave(); return false;" value="Quit" />
 </form>
 
-<ul id="userlist">
-    <li>Offline</li>
-    <!-- Built by JS -->
-</ul>
+<div id="rh_panel">
+    <ul id="userlist">
+        <li>Offline</li>
+        <!-- Built by JS -->
+    </ul>
+    <div id="chat">
+        <span>Chat</span>
+        <form onsubmit="chat(); return false;" id="form_chat">
+            <input type="text"   id="form_chat_text" placeholder="Enter your message" disabled/>
+            <input type="submit" id="form_chat_submit" value="Send" disabled/>
+        </form>
+        <div id="chat_area"></div>
+    </div>
+</div>
 
 </body>
 </html>

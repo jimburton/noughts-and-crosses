@@ -1,4 +1,7 @@
 package CI346.websockets.noughtsandcrosses;
+/**
+ * A POJO that represents a player.
+ */
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;

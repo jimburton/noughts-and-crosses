@@ -25,7 +25,6 @@ import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.*;
 public class NACWebSocket {
 
     // this map is shared between sessions and threads, so it needs to be thread-safe
-    // (http://stackoverflow.com/a/2688817)
     static Map<Session, Player> userMap = new ConcurrentHashMap<>();
     static Gson gson = new Gson();
     static Game game;
@@ -44,11 +43,21 @@ public class NACWebSocket {
         , LEAVE     //CLIENT <-> SERVER. Player is disconnecting or opponent has left
     }
 
+    /**
+     * Handle a new connection
+     * @param session
+     */
     @OnWebSocketConnect
     public void connected(Session session) {
         //session.getRemote().sendString();
     }
 
+    /**
+     * Handle a lost connection
+     * @param session
+     * @param statusCode
+     * @param reason
+     */
     @OnWebSocketClose
     public void closed(Session session, int statusCode, String reason) {
         userMap.remove(session);
@@ -145,6 +154,10 @@ public class NACWebSocket {
         broadcastMessage("", LIST, "");
     }
 
+    /**
+     * Get the list of user names.
+     * @return
+     */
     private static Collection<String> getUserList() {
         return userMap.values().stream()
                 .map(Player::getName)

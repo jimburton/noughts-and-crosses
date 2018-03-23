@@ -99,6 +99,10 @@ function set() {
     sendMove(this.identifier);
 }
 
+/*
+ * Sets "clicked" square and updates the turn, can be called directly
+ * rather than as an event handler.
+ */
 function setDirect(identifier) {
     var cell = getCellByIdentifier(identifier);
     cell.innerHTML = turn;
@@ -122,8 +126,11 @@ function setDirect(identifier) {
     }
 }
 
+/*
+ * Retrieve a cell from the table given an identifier
+ */
 function getCellByIdentifier(identifier) {
-    var board = document.getElementById('tictactoe').getElementsByTagName('table')[0];
+    var board = id('tictactoe').getElementsByTagName('table')[0];
     var rows = board.getElementsByTagName("tr");
     for(var i = 0; i < rows.length; i++) {
         var row = rows[i];
@@ -135,6 +142,32 @@ function getCellByIdentifier(identifier) {
         }
     }
     return null;
+}
+
+//enable the board for playing
+function enableBoard() {
+    setCellHandler(set);
+}
+
+//disable the board for playing
+function disableBoard() {
+    setCellHandler(function(){});
+}
+
+//assign an onlick handler to every cell in the table
+function setCellHandler(handler) {
+    var board = id('tictactoe').getElementsByTagName('table')[0];
+    var rows = board.getElementsByTagName("tr");
+    for(var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var arr = row.getElementsByTagName("td");
+        for(var j = 0; j < arr.length; j++) {
+            (function(_j){
+                //arr[_j].onclick = function() { alert(arr[_j].innerHTML); };
+                arr[_j].onclick =  handler;
+            })(j);
+        }
+    }
 }
 
 window.addEventListener("load", initBoard, false);

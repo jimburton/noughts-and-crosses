@@ -40,15 +40,24 @@ li {
     margin: 5px 0;
 }
 
-#userlist {
+#rh_panel {
     position: fixed;
     left: 50%;
     list-style: none;
     margin-left: 250px;
     background: #f0f0f9;
     padding: 5px 10px;
-    width: 150px;
+    width: 250px;
     top: 11px;
+}
+
+#userlist {
+    list-style: none;
+    width: 250px;
+}
+
+.error {
+    color: red;
 }
 
 @keyframes enter {
