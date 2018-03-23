@@ -60,6 +60,7 @@ function startNewGame() {
     boxes.forEach(function (square) {
         square.innerHTML = EMPTY;
     });
+    setupJoin();
 }
 
 /*
@@ -94,6 +95,7 @@ function set() {
         return;
     }
     setDirect(this.identifier);
+    setTurnLabel();
     sendMove(this.identifier);
 }
 
@@ -103,14 +105,19 @@ function setDirect(identifier) {
     moves += 1;
     score[turn] += identifier;
     if (win(cell)) {
-        alert('Winner: Player ' + turn);
+        if(turn === side) {
+            alert('You win!');
+        } else {
+            alert('You lose!');
+        }
+        inGame = false;
         startNewGame();
     } else if (moves === N_SIZE * N_SIZE) {
-        alert("Draw");
+        alert("It's a draw!");
+        inGame = false;
         startNewGame();
     } else {
         turn = turn === "X" ? "O" : "X";
-        //document.getElementById('turn').textContent = 'Player ' + turn;
     }
 }
 

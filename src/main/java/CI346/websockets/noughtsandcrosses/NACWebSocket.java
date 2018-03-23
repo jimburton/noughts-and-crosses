@@ -94,14 +94,15 @@ public class NACWebSocket {
         val p2Opt = userMap.values().stream()
                 .filter(p -> p.getName().equals(oppName))
                 .findFirst();
+        val userList = getUserList();
         if(p2Opt.isPresent() && !p2Opt.get().isInGame()) {
             val p2 = p2Opt.get();
             log.info("new game between "+p1.getName()+" and "+p2.getName());
             val p2session = getSession(p2);
             game = new Game(p1, p2, session, p2session);
             game.setInPlay(p1);
-            send(session, PLAYER_1, p2.getName());
-            send(p2session, PLAYER_2, p1.getName());
+            send(session, PLAYER_1, p2.getName(), userList);
+            send(p2session, PLAYER_2, p1.getName(), userList);
         } else {
             send(session, JOIN);
         }
@@ -138,9 +139,15 @@ public class NACWebSocket {
         userMap.remove(session);
         if(game != null) {
             Session otherSession = game.getOpponentSession(session);
-            send(otherSession, LEAVE);
+            send(otherSession, LEAVE, "", getUserList());
         }
         broadcastMessage("", LIST, "");
+    }
+
+    private static Collection<String> getUserList() {
+        return userMap.values().stream()
+                .map(Player::getName)
+                .collect(Collectors.toList());
     }
 
     /**
@@ -152,7 +159,7 @@ public class NACWebSocket {
     public static void broadcastMessage(String sender, MsgType type, String msg) {
         val names = userMap.values().stream()
                 .filter(p -> !p.isInGame())
-                .map(p -> p.getName())
+                .map(Player::getName)
                 .collect(Collectors.toList());
         userMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
             try {

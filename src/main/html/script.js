@@ -2,16 +2,14 @@
 WebSocket client for playing Noughts and Crosses.
  */
 var websocket;
-var output;
-var name = "...";
-var player;
-var inGame = false;
+var side;//"X" or "0"
+var name;
+var oppenentName;
+var inGame;
 
 //Setup function called as the window.onload handler
 function init() {
-    output = id("name_holder");
     setupJoin();
-
     websocket = new WebSocket("ws://localhost:4567/game");
     websocket.onopen = function(evt) { onOpen(evt) };
     websocket.onclose = function(evt) { onClose(evt) };
@@ -20,9 +18,7 @@ function init() {
 }
 
 //Handler for websocket.onopen
-function onOpen(evt) {
-    //writeToScreen("CONNECTED");
-}
+function onOpen(evt) {}
 
 //Handler for websocket.onclose
 function onClose(evt) {
@@ -38,6 +34,7 @@ function handleMessage(msg) {
         case "MOVE":
             //received a move
             setDirect(data.userMessage);
+            setTurnLabel();
             enableBoard();
             break;
         case "NAME":
@@ -56,16 +53,22 @@ function handleMessage(msg) {
             break;
         case "PLAYER_1":
             //we started a game
-            setNameAndPlayer("X", data.userMessage);
+            inGame = true;
+            setNameAndPlayer("X", data.userMessage, data.userList);
             enableBoard();
             break;
         case "PLAYER_2":
             //another player started a game with us
-            setNameAndPlayer("O", data.userMessage);
+            inGame = true;
+            setNameAndPlayer("O", data.userMessage, data.userList);
             break;
         case "LEAVE":
             //was kicked out
-            setupJoin();
+            alert(oppenentName+" left the game :-(");
+            inGame = false;
+            doUserList(data.userList);
+            setupLeave();
+            startNewGame();
             disableBoard();
             break;
     }
@@ -103,8 +106,12 @@ function doUserList(userList) {
     userList.forEach(function (user) {
         var link;
         if(!(name === user)) {
-            link = "<a href='#' onclick='return join(\""
+            if (inGame) {
+                link = user;
+            } else {
+                link = "<a href='#' onclick='return join(\""
                     + user + "\");' >" + user + "</a>";
+            }
         } else {
             link = "<strong>" + user + "</strong>";
         }
@@ -133,22 +140,36 @@ function acceptMove(cell) {
 function sendMove(identifier) {
     send("MOVE", identifier);
     disableBoard();
+    setTurnLabel();
 }
 
 //Handler for name being accepted by the server
 function setName(str) {
     name = str;
-    var label = "<strong>Playing as:</strong> {0}".formatUnicorn(name);
+    var label = "<strong>Online as:</strong> {0}".formatUnicorn(name);
     insert("name_holder", label);
 }
 
 //Update name text when game begins
-function setNameAndPlayer(str, other) {
-    player = str;
+function setNameAndPlayer(str, other, userList) {
+    side = str;
+    oppenentName = other;
     var label = "<strong>Playing as:</strong>  {0} [{1}] <strong>against</strong> {2}";
-    label = label.formatUnicorn(name, player, other);
-    id("name_holder").innerHTML = "";
-    insert("name_holder", label);
+    label = label.formatUnicorn(name, side, other);
+    id("name_holder").innerHTML = label;
+    setTurnLabel();
+    doUserList(userList);
+}
+
+function setTurnLabel() {
+    if(!inGame) {
+        id("turn").innerHTML = "";
+    } else {
+        var turnLabel = "It is <strong>{0}</strong> turn"
+        var turnInner = (turn === side ? "your" : oppenentName + "'s");
+        turnLabel = turnLabel.formatUnicorn(turnInner);
+        id("turn").innerHTML = turnLabel;
+    }
 }
 
 //Helper function for inserting HTML as the first child of an element
@@ -159,14 +180,6 @@ function insert(targetId, message) {
 //Helper function for selecting element by id
 function id(id) {
     return document.getElementById(id);
-}
-
-//Write to the output div
-function writeToScreen(message) {
-    var pre = document.createElement("p");
-    pre.style.wordWrap = "break-word";
-    pre.innerHTML = message;
-    output.appendChild(pre);
 }
 
 //Send a possible name to the server
@@ -184,6 +197,7 @@ function send(type, msg) {
 
 //Leave the game
 function leave() {
+    inGame = false;
     send("LEAVE", "");
     setupJoin();
     var node = id("userlist");
@@ -191,7 +205,8 @@ function leave() {
     while (node.firstChild) {
         node.removeChild(node.firstChild);
     }
-    insert("userlist", "<li>Players online:</li>");
+    insert("userlist", "<li>Offline</li>");
+    startNewGame();
 }
 
 //Reset the name submission form, hiding the Quit button
@@ -200,6 +215,7 @@ function setupJoin() {
     id("form_name_submit").style.display = 'block'
     id("form_name_leave").style.display = 'none'
     id("name_holder").innerHTML = "";
+    id("turn").innerHTML = "";
 }
 
 //Reset the name submission form, hiding the Name submission fields
@@ -207,6 +223,8 @@ function setupLeave() {
     id("form_name_text").style.display = 'none'
     id("form_name_submit").style.display = 'none'
     id("form_name_leave").style.display = 'block'
+    id("name_holder").innerHTML = "";
+    id("turn").innerHTML = "";
 }
 
 //printf style function
