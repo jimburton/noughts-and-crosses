@@ -106,13 +106,16 @@ function send(type, msg) {
 ## Exercises
 
 Add the functionality to allow players to chat with each other during a game. On the server side,
-add a `MsgType` called `CHAT` and a clause to the switch statement in the `onMessage` handler that
-sends a message to the opponent. You can expect the message to be stored in the `userMessage` field
-of the `Message` that arrives.
+you need to edit the class `NACWebSocket`. Add a `MsgType` called `CHAT` and a clause to the 
+switch statement in the `onMessage` handler that sends a message to the opponent. You can expect 
+the message to be stored in the `userMessage` field of the `Message` that arrives.
 
-On the client side, you will be adding code to the file `script.js`. You need to enable the form 
-fields relating to chat when a game begins, and disable them when a game ends. If you have a form 
-field called `"foo"` you can enable it like this:
+On the client side, you will be adding code to the file `script.js` in the `resources` folder. 
+Although you aren't expected to be a JavaScript expert, you should be able to work out how to
+add the chat functionality by calling existing functions and changing the properties of some
+HTML elements. You need to enable the form fields relating to chat when a game begins, and disable 
+them when a game ends. Read the contents of `index.html` to find the names of the fields. If you 
+have a form field called `"foo"` you can enable it like this:
 
     id("foo").disabled = false;
     
@@ -123,7 +126,7 @@ when disabling the chat controls, you should clear the `div` with the id `chat_a
 Put the enabling and disabling code into two functions, `enableChat` and `disableChat`. Add calls
 to these functions in `setNameAndPlayer` (called when a game begins) and
 `setupJoin` (called when the page loads and when a game ends). When the chat form is submitted, 
-a function called `chat` which is defined in `script.js` is invoked -- edit this function to grab 
+a function called `chat`, defined in `script.js`, is invoked -- edit this function to grab 
 the contents of the field `form_chat_text` and prepend the name of the current player before it 
 (e.g. if your username is `"bob"` and you type `"Hi"` into the field, the text that should be sent is
 `"bob: Hi"`). The username is available in the field `name`. Use the `send` function to send the 
@@ -138,3 +141,5 @@ to the `div` with the id `chat_area`. You can do that using the `insertAdjacentH
 
     id("chat_area").insertAdjacentHTML("beforeend", text);
 
+In order to make messages appear on a new line, wrap the text in `<p>...</p>` tags before inserting
+it.
