@@ -42,13 +42,13 @@ public class NACWebSocket {
      */
     enum MsgType {
         JOIN        //CLIENT -> SERVER. Player requests to join a game
-        , LEAVE     //CLIENT -> SERVER. Player is disconnecting
         , NAME      //CLIENT -> SERVER. Player is requesting a name.
         , NAME_ACK  //CLIENT <- SERVER. Name is accepted.
         , LIST      //CLIENT <- SERVER. Sending list of players not in a game
         , PLAYER_1  //CLIENT <- SERVER. Player is Player 1.
         , PLAYER_2  //CLIENT <- SERVER. Player is Player 2
         , MOVE      //CLIENT <-> SERVER. Message containing a move
+        , LEAVE     //CLIENT <-> SERVER. Player is disconnecting or opponent has left
     }
 
     @OnWebSocketConnect
@@ -77,15 +77,17 @@ public class NACWebSocket {
         log.info("Received: "+msg.toString());
         switch (msg.getMsgType()) {
             case NAME:
-                setNameOrRequestAgain(session, msg);
+                setNameOrRequestAgain(session, msg.getUserMessage());
                 break;
             case LEAVE:
                 leave(session);
                 break;
             case JOIN:
-                join(session, msg);
+                startGame(session, msg.getUserMessage());
                 break;
             case MOVE:
+                send(game.getOpponentSession(session), MOVE, msg.getUserMessage());
+                game.takeTurn();//IS THIS NEEDED?
                 break;
         }
     }
@@ -93,21 +95,21 @@ public class NACWebSocket {
     /**
      * Handle player starting a new game.
      * @param session
-     * @param msg
+     * @param oppName
      */
-    private static void join(Session session, Message msg) {
+    private static void startGame(Session session, String oppName) {
         val p1 = userMap.get(session);
         val p2Opt = userMap.values().stream()
-                .filter(p -> p.getName().equals(msg.getUserMessage()))
+                .filter(p -> p.getName().equals(oppName))
                 .findFirst();
         if(p2Opt.isPresent() && !p2Opt.get().isInGame()) {
             val p2 = p2Opt.get();
             log.info("new game between "+p1.getName()+" and "+p2.getName());
-            game = new Game(p1, p2);
-            game.setInPlay(p1);
             val p2session = getSession(p2);
-            send(session, PLAYER_1);
-            send(p2session, PLAYER_2);
+            game = new Game(p1, p2, session, p2session);
+            game.setInPlay(p1);
+            send(session, PLAYER_1, p2.getName());
+            send(p2session, PLAYER_2, p1.getName());
         } else {
             send(session, JOIN);
         }
@@ -116,23 +118,22 @@ public class NACWebSocket {
     /**
      * Set the player's name if the requested name is unique. Otherwise, request again.
      * @param session
-     * @param msg
+     * @param theName
      */
-    private static void setNameOrRequestAgain(Session session, Message msg) {
+    private static void setNameOrRequestAgain(Session session, String theName) {
         val names = userMap.values();
-        val name = msg.getUserMessage();
         if(names.stream()
                 .map(Player::getName)
-                .anyMatch(n -> n.equals(name))) {
+                .anyMatch(n -> n.equals(theName))) {
             log.info("name clash!");
             send(session, MsgType.NAME);
         } else {
-            log.info("name is free: "+name);
-            userMap.put(session, new Player(name));
+            log.info("name is free: "+theName);
+            userMap.put(session, new Player(theName));
             log.info("Number of names: "+userMap.keySet().size());
             send(session, MsgType.NAME_ACK,
-                    name, null);
-            broadcastMessage(name, LIST, "");
+                    theName, null);
+            broadcastMessage(theName, LIST, "");
         }
     }
 
@@ -143,6 +144,10 @@ public class NACWebSocket {
     private static void leave(Session session) {
         //Player left = userMap.get(session);
         userMap.remove(session);
+        if(game != null) {
+            Session otherSession = game.getOpponentSession(session);
+            send(otherSession, LEAVE);
+        }
         broadcastMessage("", LIST, "");
     }
 

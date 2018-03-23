@@ -1,6 +1,4 @@
 /*
- * Tic Tac Toe
- *
  * A Tic Tac Toe game in HTML/JavaScript/CSS.
  *
  * @author: Vasanth Krishnamoorthy
@@ -38,7 +36,6 @@ function initBoard() {
                 cell.classList.add('diagonal1');
             }
             cell.identifier = identifier;
-            cell.addEventListener("click", set);
             row.appendChild(cell);
             boxes.push(cell);
             identifier += identifier;
@@ -46,6 +43,7 @@ function initBoard() {
     }
 
     document.getElementById("tictactoe").appendChild(board);
+    disableBoard();
     startNewGame();
 }
 
@@ -95,9 +93,15 @@ function set() {
     if (this.innerHTML !== EMPTY) {
         return;
     }
-    this.innerHTML = turn;
+    setDirect(this.identifier);
+    sendMove(this.identifier);
+}
+
+function setDirect(identifier) {
+    var cell = getCellByIdentifier(identifier);
+    cell.innerHTML = turn;
     moves += 1;
-    score[turn] += this.identifier;
+    score[turn] += identifier;
     if (win(this)) {
         alert('Winner: Player ' + turn);
         startNewGame();
@@ -106,8 +110,23 @@ function set() {
         startNewGame();
     } else {
         turn = turn === "X" ? "O" : "X";
-        document.getElementById('turn').textContent = 'Player ' + turn;
+        //document.getElementById('turn').textContent = 'Player ' + turn;
     }
+}
+
+function getCellByIdentifier(identifier) {
+    var board = document.getElementById('tictactoe').getElementsByTagName('table')[0];
+    var rows = board.getElementsByTagName("tr");
+    for(var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var arr = row.getElementsByTagName("td");
+        for(var j = 0; j < arr.length; j++) {
+            if (arr[j].identifier ==  identifier) {
+                return arr[j];
+            }
+        }
+    }
+    return null;
 }
 
 window.addEventListener("load", initBoard, false);

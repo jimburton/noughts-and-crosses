@@ -3,6 +3,7 @@ package CI346.websockets.noughtsandcrosses;
 import lombok.Data;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.jetty.websocket.api.Session;
 
 /**
  * Contains the state of a game in-progress. Using the Lombok annotations
@@ -18,10 +19,18 @@ public class Game {
     private final Player p1;
     @NonNull
     private final Player p2;
+    @NonNull
+    private final Session p1Session;
+    @NonNull
+    private final Session p2Session;
     private Player inPlay;
 
     public void takeTurn() {
         setInPlay((getInPlay().equals(getP1())) ? getP2() : getP1());
+    }
+
+    public Session getOpponentSession(Session session) {
+        return (session.equals(p1Session) ? p2Session : p1Session);
     }
 
 }

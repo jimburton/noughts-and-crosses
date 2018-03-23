@@ -16,16 +16,15 @@
 <form onsubmit="sendName(); return false;" id="form_name">
     <input type="text"   id="form_name_text" placeholder="Enter your name"/>
     <input type="submit" id="form_name_submit" value="Submit"/>
-    <input type="submit" id="form_name_leave" onclick="leave(); return false;" value="Quit" />
 </form>
 
-<div id="output"></div>
-
-<ul id="userlist"> <!-- Built by JS --> </ul>
+<ul id="userlist">
+    <li>Players online:</li>
+    <!-- Built by JS -->
+</ul>
 
 <div id="tictactoe"></div>
-<div align="left">
-    <span id='turn'>Player X</span>
-</div>
+<div id="turn"></div>
+<input type="submit" id="form_name_leave" onclick="leave(); return false;" value="Quit" />
 </body>
 </html>
