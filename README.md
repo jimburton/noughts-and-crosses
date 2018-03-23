@@ -107,8 +107,10 @@ function send(type, msg) {
 
 Add the functionality to allow players to chat with each other during a game. On the server side,
 you need to edit the class `NACWebSocket`. Add a `MsgType` called `CHAT` and a clause to the 
-switch statement in the `onMessage` handler that sends a message to the opponent. You can expect 
-the message to be stored in the `userMessage` field of the `Message` that arrives.
+switch statement in the `onMessage` handler that sends a message to both opponents. Note the
+method `getOpponentSession`. You can expect the message to be stored in the `userMessage` field 
+of the `Message` that arrives. (It is pretty inefficient to send the chat message back to
+the user who wrote it but treating both users in the same way makes the client side simpler.)
 
 On the client side, you will be adding code to the file `script.js` in the `resources` folder. 
 Although you aren't expected to be a JavaScript expert, you should be able to work out how to
