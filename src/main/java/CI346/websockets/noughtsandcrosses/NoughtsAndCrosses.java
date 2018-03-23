@@ -1,4 +1,7 @@
 package CI346.websockets.noughtsandcrosses;
+/**
+ * Entry point for the Noughts and Crosses game.
+ */
 
 import static spark.Spark.*;
 

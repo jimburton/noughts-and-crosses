@@ -1,46 +1,52 @@
 package CI346.websockets.noughtsandcrosses;
+/**
+ * The WebSocket handler for playing the game.
+ *
+ * Includes examples of
+ * + simple logging
+ * + using Gson for encoding/decoding between JSON and POJOs
+ *
+ */
 
+import lombok.val;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
-//import org.json.JSONObject;
 import com.google.gson.Gson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.*;
-import static j2html.TagCreator.*;
 
 @WebSocket
 public class NACWebSocket {
 
-    // Store sessions if you want to, for example, broadcast a message to all users
-    //private static final Queue<Session> sessions = new ConcurrentLinkedQueue<>();
     // this map is shared between sessions and threads, so it needs to be thread-safe
     // (http://stackoverflow.com/a/2688817)
     static Map<Session, Player> userMap = new ConcurrentHashMap<>();
-    static List<Game> games = new ArrayList<>();
     static Gson gson = new Gson();
+    static Game game;
 
-
+    /**
+     * The Noughts and Crosses message protocol.
+     */
     enum MsgType {
-        JOIN
-        , LEAVE
-        , LIST
-        , MOVE
-        , NAME
-        , NAME_ACK
-        , PLAYER_1
-        , PLAYER_2
+        JOIN        //CLIENT -> SERVER. Player requests to join a game
+        , LEAVE     //CLIENT -> SERVER. Player is disconnecting
+        , NAME      //CLIENT -> SERVER. Player is requesting a name.
+        , NAME_ACK  //CLIENT <- SERVER. Name is accepted.
+        , LIST      //CLIENT <- SERVER. Sending list of players not in a game
+        , PLAYER_1  //CLIENT <- SERVER. Player is Player 1.
+        , PLAYER_2  //CLIENT <- SERVER. Player is Player 2
+        , MOVE      //CLIENT <-> SERVER. Message containing a move
     }
 
     static Logger logger = LoggerFactory.getLogger(NACWebSocket.class);
@@ -58,6 +64,12 @@ public class NACWebSocket {
         //broadcastMessage("Server", MsgType.INFO, username + " left the club");
     }
 
+    /**
+     * Handle incoming messages.
+     * @param session
+     * @param message
+     * @throws IOException
+     */
     @OnWebSocketMessage
     public void message(Session session, String message) throws IOException {
         logger.info("Received: "+message.toString());
@@ -78,17 +90,22 @@ public class NACWebSocket {
         }
     }
 
+    /**
+     * Handle player starting a new game.
+     * @param session
+     * @param msg
+     */
     private static void join(Session session, Message msg) {
-        Player p1 = userMap.get(session);
-        Optional<Player> p2Opt = userMap.values().stream()
+        val p1 = userMap.get(session);
+        val p2Opt = userMap.values().stream()
                 .filter(p -> p.getName().equals(msg.getUserMessage()))
                 .findFirst();
         if(p2Opt.isPresent() && !p2Opt.get().isInGame()) {
-            Player p2 = p2Opt.get();
+            val p2 = p2Opt.get();
             logger.info("new game between "+p1.getName()+" and "+p2.getName());
-            Game g = new Game(p1, p2);
-            games.add(g);
-            Session p2session = getSession(p2);
+            game = new Game(p1, p2);
+            game.setInPlay(p1);
+            val p2session = getSession(p2);
             send(session, PLAYER_1);
             send(p2session, PLAYER_2);
         } else {
@@ -96,19 +113,17 @@ public class NACWebSocket {
         }
     }
 
-    private static Session getSession(Player p) {
-        for (Entry<Session, Player> entry : userMap.entrySet()) {
-            if (p.equals(entry.getValue())) {
-                return entry.getKey();
-            }
-        }
-        return null;
-    }
-
+    /**
+     * Set the player's name if the requested name is unique. Otherwise, request again.
+     * @param session
+     * @param msg
+     */
     private static void setNameOrRequestAgain(Session session, Message msg) {
-        Collection<Player> names = userMap.values();
-        String name = msg.getUserMessage();
-        if(names.stream().map(Player::getName).anyMatch(n -> n.equals(name))) {
+        val names = userMap.values();
+        val name = msg.getUserMessage();
+        if(names.stream()
+                .map(Player::getName)
+                .anyMatch(n -> n.equals(name))) {
             logger.info("name clash!");
             send(session, MsgType.NAME);
         } else {
@@ -121,48 +136,78 @@ public class NACWebSocket {
         }
     }
 
+    /**
+     * Player is leaving.
+     * @param session
+     */
     private static void leave(Session session) {
-        Player left = userMap.get(session);
+        //Player left = userMap.get(session);
         userMap.remove(session);
-        games = games.stream()
-                .filter(g -> !(g.getP1().equals(left) && !(g.getP2().equals(left))))
-                .collect(Collectors.toList());
         broadcastMessage("", LIST, "");
     }
 
-    //Sends a message from one user to all users, along with a list of current usernames
+    /**
+     * Sends a message from one user to all users, along with a list of current usernames.
+     * @param sender
+     * @param type
+     * @param msg
+     */
     public static void broadcastMessage(String sender, MsgType type, String msg) {
 
-        Collection<String> names = userMap.values().stream()
+        val names = userMap.values().stream()
                 .filter(p -> !p.isInGame())
                 .map(p -> p.getName())
                 .collect(Collectors.toList());
-        Collection<String> gameStrings = games.stream()
-                .map(g -> g.getP1().getName()+" vs "+g.getP1().getName())
-                .collect(Collectors.toList());
-        gameStrings.addAll(names);
         userMap.keySet().stream().filter(Session::isOpen).forEach(session -> {
             try {
-                send(session, type, msg, gameStrings);
+                send(session, type, msg, names);
             } catch (Exception e) {
                 e.printStackTrace();
             }
         });
     }
 
+    /**
+     * Helper method to find a session associated with Player p.
+     * @param p
+     * @return
+     */
+    private static Session getSession(Player p) {
+        val sessionOpt = userMap.entrySet().stream()
+                .filter(e -> e.getValue().equals(p))
+                .map(Entry::getKey).findFirst();
+        return (sessionOpt.isPresent() ? sessionOpt.get() : null);
+    }
+
+    /**
+     * Send a message which consists only of a Message type.
+     * @param session
+     * @param type
+     */
     private static void send(Session session, MsgType type) {
         send(session, type, "", null);
     }
 
+    /**
+     * Send a message with a Message type and a string forming the message itself.
+     * @param session
+     * @param type
+     * @param theMsg
+     */
     private static void send(Session session, MsgType type, String theMsg) {
         send(session, type, theMsg, null);
     }
 
+    /**
+     * Send a message with a type, some content and the list of available users.
+     * @param session
+     * @param type
+     * @param theMsg
+     * @param list
+     */
     private static void send(Session session, MsgType type,
                              String theMsg, Collection<String> list) {
-        Message msg = new Message(type,
-                theMsg,
-                list);
+        val msg = new Message(type, theMsg, list);
         try {
             logger.info("Sending: "+gson.toJson(msg));
             session.getRemote().sendString(gson.toJson(msg));
