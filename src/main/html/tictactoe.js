@@ -102,7 +102,7 @@ function setDirect(identifier) {
     cell.innerHTML = turn;
     moves += 1;
     score[turn] += identifier;
-    if (win(this)) {
+    if (win(cell)) {
         alert('Winner: Player ' + turn);
         startNewGame();
     } else if (moves === N_SIZE * N_SIZE) {

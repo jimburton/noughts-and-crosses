@@ -38,6 +38,7 @@ function handleMessage(msg) {
         case "MOVE":
             //received a move
             setDirect(data.userMessage);
+            enableBoard();
             break;
         case "NAME":
             //name was rejected

@@ -2,10 +2,6 @@ package CI346.websockets.noughtsandcrosses;
 /**
  * The WebSocket handler for playing the game.
  *
- * Includes examples of
- * + simple logging
- * + using Gson for encoding/decoding between JSON and POJOs
- *
  */
 
 import lombok.extern.slf4j.Slf4j;
@@ -16,10 +12,7 @@ import org.eclipse.jetty.websocket.api.annotations.OnWebSocketConnect;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketMessage;
 import org.eclipse.jetty.websocket.api.annotations.WebSocket;
 import com.google.gson.Gson;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
@@ -68,10 +61,9 @@ public class NACWebSocket {
      * Handle incoming messages.
      * @param session
      * @param message
-     * @throws IOException
      */
     @OnWebSocketMessage
-    public void message(Session session, String message) throws IOException {
+    public void message(Session session, String message) {
         log.info("Received: "+message.toString());
         val msg = gson.fromJson(message, Message.class);
         log.info("Received: "+msg.toString());
@@ -158,7 +150,6 @@ public class NACWebSocket {
      * @param msg
      */
     public static void broadcastMessage(String sender, MsgType type, String msg) {
-
         val names = userMap.values().stream()
                 .filter(p -> !p.isInGame())
                 .map(p -> p.getName())
