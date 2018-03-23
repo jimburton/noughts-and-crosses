@@ -11,6 +11,11 @@ Fetch the code, then build and run it with Maven:
     $ cd sparktest
     $ mvn compile && mvn exec:java
     
+This starts the server running. Now you can open a client by visiting http://localhost:4567. Open 
+several clients in different tabs and connect to the server using different names. As users join 
+the server, their names will be listed as links -- clicking on a link will start a game with that 
+user.
+
 For more information on how to use Spark, see http://sparkjava.com/tutorials/.
     
 ## Using the Lombok annotations
@@ -107,19 +112,29 @@ sends a message to the opponent. You can expect the message to be stored in the 
 of the `Message` that arrives.
 
 On the client side, you will be adding code to the file `script.js`. You need to enable the form 
-with the id `form_chat` when a game begins, and disable it when a game ends. If you have a form 
+fields relating to chat when a game begins, and disable them when a game ends. If you have a form 
 field called `"foo"` you can enable it like this:
 
     id("foo").disabled = false;
     
-Note that this is using our helper function, `id`, to get a reference to the element.
+Note that this is using our helper function, `id`, to get a reference to the element. In addition,
+when disabling the chat controls, you should clear the `div` with the id `chat_area` by setting its
+`innerHTML` property to the empty string.
 
-Add the enabling and disabling code to the functions `setupLeave` (called when a game begins) and
+Put the enabling and disabling code into two functions, `enableChat` and `disableChat`. Add calls
+to these functions in `setNameAndPlayer` (called when a game begins) and
 `setupJoin` (called when the page loads and when a game ends). When the chat form is submitted, 
-a function called `chat` is invoked -- edit this function to grab the contents of the field
-`form_chat_text` and use the `send` function to send a message to the server with the string 
-`"CHAT"` as its type and the contents of the field as its `userMessage`.
+a function called `chat` which is defined in `script.js` is invoked -- edit this function to grab 
+the contents of the field `form_chat_text` and prepend the name of the current player before it 
+(e.g. if your username is `"bob"` and you type `"Hi"` into the field, the text that should be sent is
+`"bob: Hi"`). The username is available in the field `name`. Use the `send` function to send the 
+message to the server with the string `"CHAT"` as its type and the text as its `userMessage`. 
+The contents of the field can be accessed like this:
+
+    var txt = id("form_chat_text").value;
 
 Finally for the client side, add a clause to the switch statement in the `handleMessage` to respond
 when a message with the type `"CHAT"` arrives. You should append the contents of `data.userMessage`
-to the `div` with the id `chat_area`.
+to the `div` with the id `chat_area`. You can do that using the `insertAdjacentHTML` function:
+
+    id("chat_area").insertAdjacentHTML("beforeend", text);
