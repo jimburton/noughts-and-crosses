@@ -64,12 +64,6 @@ function handleMessage(msg) {
             break;
         case "LEAVE":
             //was kicked out
-            alert(oppenentName+" left the game :-(");
-            inGame = false;
-            doUserList(data.userList);
-            setupLeave();
-            startNewGame();
-            disableBoard();
             break;
     }
 }
@@ -98,6 +92,16 @@ function setCellHandler(handler) {
             })(j);
         }
     }
+}
+
+//clear the userlist
+function resetUserList() {
+    var node = id("userlist");
+    node.innerHTML = "";
+    while (node.firstChild) {
+        node.removeChild(node.firstChild);
+    }
+    insert("userlist", "<li>Offline</li>");
 }
 
 //Write a list of users to the document
@@ -200,12 +204,7 @@ function leave() {
     inGame = false;
     send("LEAVE", "");
     setupJoin();
-    var node = id("userlist");
-    node.innerHTML = "";
-    while (node.firstChild) {
-        node.removeChild(node.firstChild);
-    }
-    insert("userlist", "<li>Offline</li>");
+    resetUserList();
     startNewGame();
 }
 
@@ -216,6 +215,7 @@ function setupJoin() {
     id("form_name_leave").style.display = 'none'
     id("name_holder").innerHTML = "";
     id("turn").innerHTML = "";
+    resetUserList();
 }
 
 //Reset the name submission form, hiding the Name submission fields

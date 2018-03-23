@@ -23,11 +23,6 @@ public class Game {
     private final Session p1Session;
     @NonNull
     private final Session p2Session;
-    private Player inPlay;
-
-    public void takeTurn() {
-        setInPlay((getInPlay().equals(getP1())) ? getP2() : getP1());
-    }
 
     public Session getOpponentSession(Session session) {
         return (session.equals(p1Session) ? p2Session : p1Session);

@@ -51,10 +51,13 @@ public class NACWebSocket {
 
     @OnWebSocketClose
     public void closed(Session session, int statusCode, String reason) {
-        //sessions.remove(session);
-        //String username = userMap.get(session).getName();
         userMap.remove(session);
-        //broadcastMessage("Server", MsgType.INFO, username + " left the club");
+        if(game != null) {
+            val oppSession = game.getOpponentSession(session);
+            userMap.remove(oppSession);
+            //send(oppSession, LEAVE);
+            game = null;
+        }
     }
 
     /**
@@ -79,7 +82,6 @@ public class NACWebSocket {
                 break;
             case MOVE:
                 send(game.getOpponentSession(session), MOVE, msg.getUserMessage());
-                game.takeTurn();//IS THIS NEEDED?
                 break;
         }
     }
@@ -100,7 +102,6 @@ public class NACWebSocket {
             log.info("new game between "+p1.getName()+" and "+p2.getName());
             val p2session = getSession(p2);
             game = new Game(p1, p2, session, p2session);
-            game.setInPlay(p1);
             send(session, PLAYER_1, p2.getName(), userList);
             send(p2session, PLAYER_2, p1.getName(), userList);
         } else {

@@ -110,6 +110,7 @@ function setDirect(identifier) {
         } else {
             alert('You lose!');
         }
+        send("LEAVE");
         inGame = false;
         startNewGame();
     } else if (moves === N_SIZE * N_SIZE) {
