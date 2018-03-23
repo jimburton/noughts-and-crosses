@@ -12,19 +12,19 @@ Fetch the code then build and run it with Maven:
     $ mvn compile && mvn exec:java
     
 For more information on how to use Spark, see http://sparkjava.com/tutorials/.
+
     
 ## Using the Lombok annotations
 
-We are using the Lombok library to reduce the amount of boilerplate we have to write. 
-For instance, in the `Game` class the `@Data` annotation generates the getters and 
-setters, `@ToString` generates a custom `toString` method, and `@AllArgsConstructor` generates 
-a constructor that requires all three fields:
+We are using the [Lombok](https://projectlombok.org) library to reduce the amount of boilerplate 
+we have to write. For instance, in the `Game` class the `@Data` annotation generates the getters 
+and setters, `@ToString` generates a custom `toString` method, and `@AllArgsConstructor` saves us
+from writing a constructor that requires all three fields:
 
 ```java
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
-
 import java.util.Collection;
 
 @Data
@@ -53,6 +53,50 @@ public class NACWebSocket {
 ```
            
 Note that your IDE will complain about the missing methods until you make it aware of Lombok, 
-e.g. by installing a [plugin](https://plugins.jetbrains.com/plugin/6317-lombok-plugin). Your favourite IDE probably 
-supports Lombok, but if it doesn't you can build and run the project on the command line using Maven. 
-See https://projectlombok.org/features/all.
+e.g. by installing a [plugin](https://plugins.jetbrains.com/plugin/6317-lombok-plugin). Your 
+favourite IDE probably supports Lombok, but if it doesn't you can build and run the project 
+on the command line using Maven. See https://projectlombok.org/features/all for an explanation 
+of all annotations.
+
+## Encoding and Decoding JSON
+
+All messages are sent between clients and server as `JSON` objects. On the server side, we use
+the [`Gson`](https://github.com/google/gson) library to bind JSON directly to POJO classes. Note 
+the use of `fromJson` and `toJson` below:
+
+```java
+public class NACWebSocket {
+    //...
+    @OnWebSocketMessage
+    public void message(Session session, String message) throws IOException { 
+        log.info("Received: "+message.toString());
+        val msg = gson.fromJson(message, Message.class); //msg: Message
+        //...
+    }
+    
+    private static void send(Session session, MsgType type,
+                                 String theMsg, Collection<String> list) {
+        val msg = new Message(type, theMsg, list);
+        try {
+            log.info("Sending: "+gson.toJson(msg));
+            session.getRemote().sendString(gson.toJson(msg)); 
+        } catch (Exception e) {
+            e.printStackTrace(); 
+        } 
+    }
+}
+```
+
+One the client side, we use the `parse` and `stringify` methods of the `JSON` object:
+
+```javascript
+function handleMessage(msg) {
+    var data = JSON.parse(msg.data);
+    //...
+}
+
+function send(type, msg) {
+    var data = {"msgType": type, "userMessage": msg};
+    websocket.send(JSON.stringify(data));
+}
+```

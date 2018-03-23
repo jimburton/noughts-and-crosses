@@ -73,7 +73,7 @@ public class NACWebSocket {
     @OnWebSocketMessage
     public void message(Session session, String message) throws IOException {
         log.info("Received: "+message.toString());
-        Message msg = gson.fromJson(message, Message.class);
+        val msg = gson.fromJson(message, Message.class);
         log.info("Received: "+msg.toString());
         switch (msg.getMsgType()) {
             case NAME:

@@ -1,9 +1,12 @@
-//Establish the WebSocket connection and set up event handlers
+/*
+WebSocket client for playing Noughts and Crosses.
+ */
 var websocket;
 var output;
 var name = "...";
 var inGame = false;
 
+//Setup function called as the window.onload handler
 function init() {
     output = id("output");
     setupJoin();
@@ -25,15 +28,17 @@ function init() {
     websocket.onerror = function(evt) { onError(evt) };
 }
 
+//Handler for websocket.onopen
 function onOpen(evt) {
     writeToScreen("CONNECTED");
 }
 
+//Handler for websocket.onclose
 function onClose(evt) {
     alert("WebSocket connection closed");
 }
 
-//Update the chat-panel, and the list of connected users
+//Main handler for incoming messages
 function handleMessage(msg) {
     var data = JSON.parse(msg.data);
     console.log(data);
@@ -56,6 +61,7 @@ function handleMessage(msg) {
     }
 }
 
+//Write a list of users to the document
 function doUserList(userList) {
     id("userlist").innerHTML = "";
     userList.forEach(function (user) {
@@ -71,26 +77,22 @@ function doUserList(userList) {
     });
 }
 
+//Handler for selecting an opponent
 function join(p2) {
     send("JOIN", p2);
 }
 
+//Handler for errors
 function onError(evt) {
     writeToScreen('<span style="color: red;">ERROR:</span> ' + evt.data);
 }
 
-//Send a message if it's not empty, then clear the input field
-function sendMessage(message) {
-    if (message !== "") {
-        websocket.send(JSON.stringify(message));
-        id("message").value = "";
-    }
-}
-
+//handler for clicking on the board
 function move(cell) {
     //make the move
 }
 
+//Handler for name being accepted by the server
 function setName(str) {
     name = str;
     insert("name_holder", name);
@@ -106,6 +108,7 @@ function id(id) {
     return document.getElementById(id);
 }
 
+//Write to the output div
 function writeToScreen(message) {
     var pre = document.createElement("p");
     pre.style.wordWrap = "break-word";
@@ -113,17 +116,20 @@ function writeToScreen(message) {
     output.appendChild(pre);
 }
 
+//Send a possible name to the server
 function sendName() {
     var theName = id("form_name_text").value;
     console.log(theName);
     send("NAME", theName);
 }
 
+//Send a JSON message with the given type
 function send(type, msg) {
     var data = {"msgType": type, "userMessage": msg};
     websocket.send(JSON.stringify(data));
 }
 
+//Leave the game
 function leave() {
     send("LEAVE", "");
     setupJoin();
@@ -134,6 +140,7 @@ function leave() {
     }
 }
 
+//Reset the name submission form, hiding the Quit button
 function setupJoin() {
     id("form_name_text").style.display = 'block'
     id("form_name_submit").style.display = 'block'
@@ -141,6 +148,7 @@ function setupJoin() {
     id("name_holder").innerHTML = "";
 }
 
+//Reset the name submission form, hiding the Name submission fields
 function setupLeave() {
     id("form_name_text").style.display = 'none'
     id("form_name_submit").style.display = 'none'
@@ -148,4 +156,5 @@ function setupLeave() {
     id("name_holder").innerHTML = name;
 }
 
+//Call the inti function when the page has loaded all resources
 window.addEventListener("load", init, false);
