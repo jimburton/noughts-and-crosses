@@ -2,8 +2,7 @@
 
 This project demonstrates how to produce a simple WebSocket server using the [Spark](http://sparkjava.com) framework 
 for web development, along with a JavaScript client. Clients connect to the server and are presented with a list of players 
-online. The client selects an opponent then the two clients play a game of Noughts and Crosses. The JavaScript for the 
-board comes from [Vasanth Krishnamoorthy](https://codepen.io/vasanthkay/details/KVzYzG).
+online. The client selects an opponent then the two clients play a game of Noughts and Crosses. 
 
 Fetch the code, then build and run it with Maven:
 
@@ -16,7 +15,7 @@ several clients in different tabs and connect to the server using different name
 the server, their names will be listed as links -- clicking on a link will start a game with that 
 user.
 
-For more information on how to use Spark, see http://sparkjava.com/tutorials/.
+For information on how to use Spark, see http://sparkjava.com/tutorials/.
     
 ## Using the Lombok annotations
 
@@ -138,3 +137,4 @@ when a message with the type `"CHAT"` arrives. You should append the contents of
 to the `div` with the id `chat_area`. You can do that using the `insertAdjacentHTML` function:
 
     id("chat_area").insertAdjacentHTML("beforeend", text);
+
