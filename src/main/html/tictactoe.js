@@ -15,7 +15,7 @@ var N_SIZE = 3,
 /*
  * Initializes the Tic Tac Toe board and starts the game.
  */
-function init() {
+function initBoard() {
     var board = document.createElement('table');
     board.setAttribute("border", 1);
     board.setAttribute("cellspacing", 0);
@@ -110,4 +110,4 @@ function set() {
     }
 }
 
-init();
+window.addEventListener("load", initBoard, false);
