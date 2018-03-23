@@ -8,6 +8,7 @@ package CI346.websockets.noughtsandcrosses;
  *
  */
 
+import lombok.extern.slf4j.Slf4j;
 import lombok.val;
 import org.eclipse.jetty.websocket.api.Session;
 import org.eclipse.jetty.websocket.api.annotations.OnWebSocketClose;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.*;
 
+@Slf4j
 @WebSocket
 public class NACWebSocket {
 
@@ -49,8 +51,6 @@ public class NACWebSocket {
         , MOVE      //CLIENT <-> SERVER. Message containing a move
     }
 
-    static Logger logger = LoggerFactory.getLogger(NACWebSocket.class);
-
     @OnWebSocketConnect
     public void connected(Session session) {
         //session.getRemote().sendString();
@@ -72,9 +72,9 @@ public class NACWebSocket {
      */
     @OnWebSocketMessage
     public void message(Session session, String message) throws IOException {
-        logger.info("Received: "+message.toString());
+        log.info("Received: "+message.toString());
         Message msg = gson.fromJson(message, Message.class);
-        logger.info("Received: "+msg.toString());
+        log.info("Received: "+msg.toString());
         switch (msg.getMsgType()) {
             case NAME:
                 setNameOrRequestAgain(session, msg);
@@ -102,7 +102,7 @@ public class NACWebSocket {
                 .findFirst();
         if(p2Opt.isPresent() && !p2Opt.get().isInGame()) {
             val p2 = p2Opt.get();
-            logger.info("new game between "+p1.getName()+" and "+p2.getName());
+            log.info("new game between "+p1.getName()+" and "+p2.getName());
             game = new Game(p1, p2);
             game.setInPlay(p1);
             val p2session = getSession(p2);
@@ -124,12 +124,12 @@ public class NACWebSocket {
         if(names.stream()
                 .map(Player::getName)
                 .anyMatch(n -> n.equals(name))) {
-            logger.info("name clash!");
+            log.info("name clash!");
             send(session, MsgType.NAME);
         } else {
-            logger.info("name is free: "+name);
+            log.info("name is free: "+name);
             userMap.put(session, new Player(name));
-            logger.info("Number of names: "+userMap.keySet().size());
+            log.info("Number of names: "+userMap.keySet().size());
             send(session, MsgType.NAME_ACK,
                     name, null);
             broadcastMessage(name, LIST, "");
@@ -209,7 +209,7 @@ public class NACWebSocket {
                              String theMsg, Collection<String> list) {
         val msg = new Message(type, theMsg, list);
         try {
-            logger.info("Sending: "+gson.toJson(msg));
+            log.info("Sending: "+gson.toJson(msg));
             session.getRemote().sendString(gson.toJson(msg));
         } catch (Exception e) {
             e.printStackTrace();
