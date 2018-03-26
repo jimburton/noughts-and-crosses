@@ -64,6 +64,9 @@ function handleMessage(msg) {
         case "LEAVE":
             //was kicked out
             break;
+        case "CHAT":
+            updateChat(data.userMessage);
+            break;
     }
 }
 
@@ -137,6 +140,7 @@ function setNameAndPlayer(str, other, userList) {
     id("name_holder").innerHTML = label;
     setTurnLabel();
     doUserList(userList);
+    enableChat();
 }
 
 function setTurnLabel() {
@@ -183,6 +187,7 @@ function setupJoin() {
     id("name_holder").innerHTML = "";
     id("turn").innerHTML = "";
     resetUserList();
+    disableChat();
 }
 
 //Reset the name submission form, hiding the Name submission fields
@@ -219,8 +224,26 @@ String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
 /////////////////////
 
 //Send a message to the opponent player
-function chat() {
 
+function enableChat() {
+    id("form_chat_text").disabled = false;
+    id("form_chat_submit").disabled = false;
+}
+
+function disableChat() {
+    id("form_chat_text").disabled = true;
+    id("form_chat_submit").disabled = true;
+    id("chat_area").innerHTML = "";
+}
+
+function chat() {
+    var txt = name+": "+id("form_chat_text").value;
+    send("CHAT", txt);
+}
+
+function updateChat(msg) {
+    var msgStr = "<p>"+msg+"</p>";
+    id("chat_area").insertAdjacentHTML("afterend", msgStr);
 }
 
 //Call the init function when the page has loaded all resources
