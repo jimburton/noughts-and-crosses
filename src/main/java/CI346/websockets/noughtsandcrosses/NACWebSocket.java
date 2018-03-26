@@ -41,7 +41,6 @@ public class NACWebSocket {
         , PLAYER_2  //CLIENT <- SERVER. Player is Player 2
         , MOVE      //CLIENT <-> SERVER. Message containing a move
         , LEAVE     //CLIENT <-> SERVER. Player is disconnecting or opponent has left
-        , CHAT      //CLIENT <-> SERVER. Messages sent between clients
     }
 
     /**
@@ -92,10 +91,6 @@ public class NACWebSocket {
                 break;
             case MOVE:
                 send(game.getOpponentSession(session), MOVE, msg.getUserMessage());
-                break;
-            case CHAT:
-                send(session, CHAT, msg.getUserMessage());
-                send(game.getOpponentSession(session), CHAT, msg.getUserMessage());
                 break;
         }
     }
