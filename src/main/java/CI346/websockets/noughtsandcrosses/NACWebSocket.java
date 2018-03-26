@@ -25,9 +25,9 @@ import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.*;
 public class NACWebSocket {
 
     // this map is shared between sessions and threads, so it needs to be thread-safe
-    static Map<Session, Player> userMap = new ConcurrentHashMap<>();
-    static Gson gson = new Gson();
-    Game game;
+    private static Map<Session, Player> userMap = new ConcurrentHashMap<>();
+    private static Gson gson = new Gson();
+    private Game game;
 
     /**
      * The Noughts and Crosses message protocol.
