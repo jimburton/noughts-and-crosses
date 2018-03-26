@@ -223,6 +223,10 @@ function chat() {
 
 }
 
+//////////////////////
+// Handle window events
+//////////////////////
+
 //Call the init function when the page has loaded all resources
 window.addEventListener("load", init, false);
 
