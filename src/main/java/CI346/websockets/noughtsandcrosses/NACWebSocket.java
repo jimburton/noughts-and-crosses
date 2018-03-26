@@ -25,9 +25,9 @@ import static CI346.websockets.noughtsandcrosses.NACWebSocket.MsgType.*;
 public class NACWebSocket {
 
     // this map is shared between sessions and threads, so it needs to be thread-safe
-    static Map<Session, Player> userMap = new ConcurrentHashMap<>();
-    static Gson gson = new Gson();
-    static Game game;
+    private static Map<Session, Player> userMap = new ConcurrentHashMap<>();
+    private static Gson gson = new Gson();
+    private Game game;
 
     /**
      * The Noughts and Crosses message protocol.
@@ -105,7 +105,7 @@ public class NACWebSocket {
      * @param session
      * @param oppName
      */
-    private static void startGame(Session session, String oppName) {
+    private void startGame(Session session, String oppName) {
         val p1 = userMap.get(session);
         val p2Opt = userMap.values().stream()
                 .filter(p -> p.getName().equals(oppName))
@@ -149,7 +149,7 @@ public class NACWebSocket {
      * Player is leaving.
      * @param session
      */
-    private static void leave(Session session) {
+    private void leave(Session session) {
         //Player left = userMap.get(session);
         userMap.remove(session);
         if(game != null) {
