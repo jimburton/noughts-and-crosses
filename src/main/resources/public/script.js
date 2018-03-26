@@ -4,7 +4,7 @@ WebSocket client for playing Noughts and Crosses.
 var websocket;
 var side;//"X" or "0"
 var name;
-var oppenentName;
+var opponentName;
 var inGame;
 
 //Setup function called as the window.onload handler
@@ -131,7 +131,7 @@ function setName(str) {
 //Update name text when game begins
 function setNameAndPlayer(str, other, userList) {
     side = str;
-    oppenentName = other;
+    opponentName = other;
     var label = "<strong>Playing as:</strong>  {0} [{1}] <strong>against</strong> {2}";
     label = label.formatUnicorn(name, side, other);
     id("name_holder").innerHTML = label;
@@ -144,7 +144,7 @@ function setTurnLabel() {
         id("turn").innerHTML = "";
     } else {
         var turnLabel = "It is <strong>{0}</strong> turn"
-        var turnInner = (turn === side ? "your" : oppenentName + "'s");
+        var turnInner = (turn === side ? "your" : opponentName + "'s");
         turnLabel = turnLabel.formatUnicorn(turnInner);
         id("turn").innerHTML = turnLabel;
     }
