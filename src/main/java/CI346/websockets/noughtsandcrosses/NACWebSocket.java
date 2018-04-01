@@ -64,7 +64,6 @@ public class NACWebSocket {
         if(game != null) {
             val oppSession = game.getOpponentSession(session);
             userMap.remove(oppSession);
-            //send(oppSession, LEAVE);
             game = null;
         }
     }
