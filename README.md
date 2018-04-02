@@ -116,12 +116,13 @@ On the client side, you will be adding code to the file `script.js` in the `reso
 Although you aren't expected to be a JavaScript expert, you should be able to work out how to
 add the chat functionality by calling existing functions and changing the properties of some
 HTML elements. You need to enable the form fields relating to chat when a game begins, and disable 
-them when a game ends. Read the contents of `index.html` to find the names of the fields. If you 
-have a form field called `"foo"` you can enable it like this:
+them when a game ends. Read the contents of `index.html` to find the identifiers of the fields, 
+which is given by the `id` attribute in a tag. For instance, `foo` in `<button id="foo"...`. 
+Then you can enable `foo` like this:
 
     id("foo").disabled = false;
     
-Note that this is using our helper function, `id`, to get a reference to the element. In addition,
+Note that this is using our helper function, `id`, to get a reference to the DOM element. In addition,
 when disabling the chat controls, you should clear the `div` with the id `chat_area` by setting its
 `innerHTML` property to the empty string.
 
