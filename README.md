@@ -20,7 +20,7 @@ For information on how to use Spark, see http://sparkjava.com/tutorials/.
 ## Using the Lombok annotations
 
 We are using the [Lombok](https://projectlombok.org) library to reduce the amount of boilerplate 
-we have to write. For instance, in the `Game` class the `@Data` annotation generates the getters 
+we have to write. For instance, in the `Message` class the `@Data` annotation generates the getters 
 and setters, `@ToString` generates a custom `toString` method, and `@AllArgsConstructor` saves us
 from writing a constructor that requires all three fields:
 
