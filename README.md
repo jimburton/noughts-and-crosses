@@ -6,7 +6,7 @@ online. The client selects an opponent then the two clients play a game of Nough
 
 Fetch the code, then build and run it with Maven:
 
-    $ git clone https://github.com/jimburton/sparktest
+    $ git clone https://github.com/jimburton/noughts-and-crosses
     $ cd sparktest
     $ mvn compile && mvn exec:java
     
