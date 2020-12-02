@@ -11,6 +11,9 @@ Fetch the code, then build and run it with Maven:
     $ cd sparktest
     $ mvn compile && mvn exec:java
     
+This starts the websocket class running on ws://localhost:4567. To
+start a game, open two copies of `http://localhost:4567/WS.html` in your browser. 
+Enter a name for each player then click on the name of the other player in one window.
 For more information on how to use Spark, see http://sparkjava.com/tutorials/.
     
 ## Using the Lombok annotations
