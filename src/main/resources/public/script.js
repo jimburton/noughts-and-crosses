@@ -55,14 +55,20 @@ function handleMessage(msg) {
             inGame = true;
             setNameAndPlayer("X", data.userMessage, data.userList);
             enableBoard();
+            toggleChat(true);
             break;
         case "PLAYER_2":
             //another player started a game with us
             inGame = true;
             setNameAndPlayer("O", data.userMessage, data.userList);
+            toggleChat(true);
             break;
         case "LEAVE":
             //was kicked out
+            toggleChat(false);
+            break;
+        case "CHAT":
+            id("chat_area").innerHTML += "\n"+data.userMessage;
             break;
     }
 }
@@ -220,7 +226,16 @@ String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
 
 //Send a message to the opponent player
 function chat() {
+    var msg = id("form_chat_text").innerHTML;
+    send("CHAT", msg);
+    id("form_chat_text").innerHTML = "";
+}
 
+// Toggle the availability of the chat form
+function toggleChat(b) {
+    id("form_chat").disabled = !b;
+    id("form_chat_text").disabled = !b;
+    id("form_chat_submit").disabled = !b;
 }
 
 //////////////////////
