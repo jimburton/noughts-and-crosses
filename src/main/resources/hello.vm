@@ -1,8 +1,0 @@
-<html>
-<body>
-    #set( $foo = "Velocity" )
-Hello $hello!
-<br />
-And hello $person.Name
-</body>
-</html>

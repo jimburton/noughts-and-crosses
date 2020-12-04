@@ -4,7 +4,7 @@ WebSocket client for playing Noughts and Crosses.
 var websocket;
 var side;//"X" or "0"
 var name;
-var oppenentName;
+var opponentName;
 var inGame;
 
 //Setup function called as the window.onload handler
@@ -63,9 +63,6 @@ function handleMessage(msg) {
             break;
         case "LEAVE":
             //was kicked out
-            break;
-        case "CHAT":
-            updateChat(data.userMessage);
             break;
     }
 }
@@ -134,13 +131,12 @@ function setName(str) {
 //Update name text when game begins
 function setNameAndPlayer(str, other, userList) {
     side = str;
-    oppenentName = other;
+    opponentName = other;
     var label = "<strong>Playing as:</strong>  {0} [{1}] <strong>against</strong> {2}";
     label = label.formatUnicorn(name, side, other);
     id("name_holder").innerHTML = label;
     setTurnLabel();
     doUserList(userList);
-    enableChat();
 }
 
 function setTurnLabel() {
@@ -148,7 +144,7 @@ function setTurnLabel() {
         id("turn").innerHTML = "";
     } else {
         var turnLabel = "It is <strong>{0}</strong> turn"
-        var turnInner = (turn === side ? "your" : oppenentName + "'s");
+        var turnInner = (turn === side ? "your" : opponentName + "'s");
         turnLabel = turnLabel.formatUnicorn(turnInner);
         id("turn").innerHTML = turnLabel;
     }
@@ -187,7 +183,6 @@ function setupJoin() {
     id("name_holder").innerHTML = "";
     id("turn").innerHTML = "";
     resetUserList();
-    disableChat();
 }
 
 //Reset the name submission form, hiding the Name submission fields
@@ -224,27 +219,13 @@ String.prototype.formatUnicorn = String.prototype.formatUnicorn ||
 /////////////////////
 
 //Send a message to the opponent player
-
-function enableChat() {
-    id("form_chat_text").disabled = false;
-    id("form_chat_submit").disabled = false;
-}
-
-function disableChat() {
-    id("form_chat_text").disabled = true;
-    id("form_chat_submit").disabled = true;
-    id("chat_area").innerHTML = "";
-}
-
 function chat() {
-    var txt = name+": "+id("form_chat_text").value;
-    send("CHAT", txt);
+
 }
 
-function updateChat(msg) {
-    var msgStr = "<p>"+msg+"</p>";
-    id("chat_area").insertAdjacentHTML("afterend", msgStr);
-}
+//////////////////////
+// Handle window events
+//////////////////////
 
 //Call the init function when the page has loaded all resources
 window.addEventListener("load", init, false);
