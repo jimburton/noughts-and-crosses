@@ -68,7 +68,9 @@ function handleMessage(msg) {
             toggleChat(false);
             break;
         case "CHAT":
-            id("chat_area").innerHTML += "\n"+data.userMessage;
+            var theDiv = id("chat_area");
+            var content = document.createTextNode(data.userMessage+"<br />");
+            theDiv.appendChild(content);
             break;
     }
 }
