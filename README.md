@@ -5,7 +5,8 @@ for web development, along with a JavaScript client. Clients connect to the serv
 online. The client selects an opponent then the two clients play a game of Noughts and Crosses. The JavaScript for the 
 board comes from [Vasanth Krishnamoorthy](https://codepen.io/vasanthkay/details/KVzYzG).
 
-Fetch the code, then build and run it with Maven:
+Fetch the code, then build and run it. You can do this in your IDE by running the entry point, `NoughtsAndCrosses.main`
+or with Maven:
 
     $ git clone https://github.com/jimburton/sparktest
     $ cd sparktest
